@@ -1,0 +1,17 @@
+# PDF text extraction
+pypdf>=4.0
+
+# Local embedding model (all-MiniLM-L6-v2)
+sentence-transformers>=3.0
+
+# Vector database with local, on-disk storage
+chromadb>=0.5
+
+# LLM API client (used in src/query.py)
+anthropic>=0.40
+
+# Loads the API key from the .env file
+python-dotenv>=1.0
+
+# Web UI
+streamlit>=1.35

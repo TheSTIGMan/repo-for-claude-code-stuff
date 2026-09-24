@@ -1,0 +1,10 @@
+# Secrets - never commit your API key
+.env
+
+# ChromaDB files on disk (rebuilt by running src/store.py)
+chroma_db/
+
+# Python cache
+__pycache__/
+*.pyc
+.venv/
