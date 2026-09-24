@@ -1,0 +1,16 @@
+[
+  {
+    "question": "EXAMPLE - replace with a question about your own PDFs. What is the refund window?",
+    "expected_facts": ["30 days"],
+    "expected_source": "example.pdf"
+  },
+  {
+    "question": "EXAMPLE - replace with a question about your own PDFs. What are the support hours?",
+    "expected_facts": ["9am", "5pm"],
+    "expected_source": "example.pdf"
+  },
+  {
+    "question": "What is the capital city of Mars?",
+    "expected_facts": ["I don't know"]
+  }
+]
