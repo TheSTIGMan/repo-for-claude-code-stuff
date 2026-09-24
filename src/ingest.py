@@ -18,7 +18,9 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 # Default folder that holds the PDFs.
-DATA_DIR = Path("data")
+# Built from this file's location, so it works no matter which folder you run from.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = PROJECT_ROOT / "data"
 
 
 def extract_pages(pdf_path: Path) -> list[dict]:
