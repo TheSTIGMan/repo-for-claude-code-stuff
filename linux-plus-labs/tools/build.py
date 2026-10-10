@@ -63,7 +63,33 @@ def split_lab(text):
     title = h.group(2) if h else ""
     # Lab heading -> eyebrow + title
     text = HEADING_RE.sub(lambda g: f"## [Lab {g.group(1)}]{{.labno}} {g.group(2)} {{#{g.group(3)}}}", text)
-    return text, answers, title
+    return format_options(text), answers, title
+
+
+OPTION_RE = re.compile(r"^[ \t]+(?:[-*][ \t]+)?\(?([A-F])[.)][ \t]+(.*?)[ \t]*\\?$")
+
+
+def format_options(text):
+    """Put each multiple-choice option (A. ... D.) on its own line with a hard line break."""
+    m = re.search(r"^\*\*Review questions\*\*\s*$", text, re.M)
+    if not m:
+        return text
+    head, tail = text[: m.end()], text[m.end():]
+    out = []
+    for line in tail.split("\n"):
+        om = OPTION_RE.match(line)
+        if om and out:
+            j = len(out) - 1
+            while j >= 0 and not out[j].strip():
+                out.pop(); j -= 1          # options follow their question directly
+            if out and not out[-1].rstrip().endswith("\\"):
+                out[-1] = out[-1].rstrip() + "\\"
+            out.append(f"   **{om.group(1)}.** {om.group(2)}\\")
+            continue
+        if out and out[-1].lstrip().startswith("**") and out[-1].endswith("\\") and not OPTION_RE.match(line):
+            out[-1] = out[-1][:-1]           # no hard break after the last option
+        out.append(line)
+    return head + "\n".join(out)
 
 
 def exam_corner(text):
