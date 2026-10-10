@@ -15,7 +15,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from pypdf import PdfReader
+from pypdf import PdfReader, PdfWriter
 
 ROOT = Path(__file__).resolve().parent.parent
 LABS = ROOT / "labs"
@@ -106,7 +106,10 @@ def coverage_rows(text, keywords):
     for k in keywords:
         if not re.search(r"[A-Za-z0-9]", k) or len(k) < 2:
             continue
-        pos = low.find(k.lower())
+        start = low.find("\n### tasks")
+        pos = low.find(k.lower(), max(start, 0))   # where it is practiced, not where it is listed
+        if pos < 0:
+            pos = low.find(k.lower())
         if pos < 0:
             continue
         where = "Lab introduction"
@@ -282,10 +285,13 @@ def decorate_toc(html_text, pages):
     return html_text[: nav.start()] + new_nav + html_text[nav.end():]
 
 
-def render(html_path, pdf_path):
+def render(html_path, pdf_path, tagged=True):
     env = dict(os.environ)
     env["NODE_PATH"] = subprocess.check_output(["npm", "root", "-g"], text=True).strip()
-    subprocess.run(["node", str(ROOT / "tools" / "pdf.js"), str(html_path), str(pdf_path)], check=True, env=env)
+    cmd = ["node", str(ROOT / "tools" / "pdf.js"), str(html_path), str(pdf_path)]
+    if not tagged:
+        cmd.append("--untagged")
+    subprocess.run(cmd, check=True, env=env)
 
 
 def heading_pages(pdf_path, html_text):
@@ -315,6 +321,44 @@ def heading_pages(pdf_path, html_text):
     return pages, len(reader.pages)
 
 
+def read_outline(pdf_path, html_text):
+    """Return the Chromium bookmark tree as (level, title, page) with titles restored from the HTML.
+
+    Chromium drops the space where a heading wraps onto a second line.
+    """
+    heads = [html.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", m.group(2)))).strip()
+             for m in re.finditer(r"<h([1-4])[^>]*>(.*?)</h\1>", html_text, re.S)]
+    norm = lambda t: re.sub(r"\W+", "", t).lower()
+    reader = PdfReader(str(pdf_path))
+    items, j = [], 0
+
+    def walk(nodes, level):
+        nonlocal j
+        for node in nodes:
+            if isinstance(node, list):
+                walk(node, level + 1)
+                continue
+            title = node.title.strip()
+            for k in range(j, min(j + 50, len(heads))):
+                if norm(heads[k]) == norm(title):
+                    title, j = heads[k], k + 1
+                    break
+            items.append((level, title, reader.get_destination_page_number(node)))
+    walk(reader.outline, 0)
+    return items
+
+
+def write_outline(pdf_path, items):
+    """Add bookmarks to the (untagged) final PDF."""
+    writer = PdfWriter(clone_from=str(pdf_path))
+    parents = {}
+    for level, title, page in items:
+        parents[level] = writer.add_outline_item(title, page, parent=parents.get(level - 1))
+    writer.page_mode = "/UseOutlines"
+    with open(pdf_path, "wb") as f:
+        writer.write(f)
+
+
 def main():
     DIST.mkdir(exist_ok=True)
     md = assemble()
@@ -328,10 +372,14 @@ def main():
         print("Wrote", html_path)
         return
     pdf_path = DIST / PDF_NAME
-    render(html_path, pdf_path)                      # pass 1
+    render(html_path, pdf_path)                      # pass 1: tagged, gives bookmarks + page numbers
     pages, n = heading_pages(pdf_path, base)
+    outline = read_outline(pdf_path, base)
     html_path.write_text(decorate_toc(base, pages), encoding="utf-8")
-    render(html_path, pdf_path)                      # pass 2 with page numbers
+    render(html_path, pdf_path, tagged=False)        # pass 2: TOC page numbers, smaller untagged file
+    write_outline(pdf_path, outline)
+    if len(PdfReader(str(pdf_path)).pages) != n:
+        print("WARNING: page count changed between passes; TOC numbers may be off")
     size = pdf_path.stat().st_size / 1e6
     print(f"Wrote {pdf_path} ({n} pages, {size:.1f} MB, {len(pages)} TOC entries numbered)")
 

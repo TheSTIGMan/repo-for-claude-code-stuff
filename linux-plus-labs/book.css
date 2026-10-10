@@ -16,8 +16,8 @@
   --warn: #b3261e;     --warn-bg: #fbeeec;
   --check: #6b4fbf;    --check-bg: #f2effa;
   --exam: #a4520a;     --exam-bg: #fbf3e8;
-  --body: "Bitstream Charter", "Charter", "Caladea", Georgia, serif;
-  --sans: "Inter", "Liberation Sans", "DejaVu Sans", sans-serif;
+  --body: "Caladea", "Liberation Serif", Georgia, serif;
+  --sans: "Lato", "Liberation Sans", "DejaVu Sans", sans-serif;
   --mono: "DejaVu Sans Mono", "Liberation Mono", monospace;
 }
 
@@ -173,10 +173,10 @@ td code, th code { white-space: nowrap; }
 
 /* ---------- appendix ---------- */
 .answers-lab h4 { margin-top: 1em; }
-.coverage td:first-child { font-family: var(--mono); font-size: 8.4pt; width: 36%; }
+.coverage td:first-child { font-family: var(--sans); font-size: 8.8pt; width: 40%; }
 .acronyms { columns: 2; column-gap: 24pt; font-size: 9pt; }
-.acronyms div { break-inside: avoid; padding: 1.5pt 0; border-bottom: 0.5pt solid #ebe8e0; }
-.acronyms b { font-family: var(--mono); display: inline-block; min-width: 62pt; }
+.acronyms div { break-inside: avoid; padding: 1.5pt 0; border-bottom: 0.5pt solid #ebe8e0; display: grid; grid-template-columns: 54pt 1fr; gap: 6pt; }
+.acronyms b { font-family: var(--mono); font-size: 8.4pt; }
 .review-sheet ul { font-size: 9.5pt; }
 blockquote { margin: 0.6em 0; padding-left: 12pt; border-left: 2pt solid var(--rule); color: var(--muted); }
 hr { border: 0; border-top: 0.75pt solid var(--rule); margin: 1.2em 0; }
